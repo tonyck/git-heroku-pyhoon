@@ -17,7 +17,7 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 
 @app.route("/", methods=['GET'])
 def basic_url():
-    return 'hello'
+    return 'hello everyone'
 
 @app.route("/hello", methods=['GET'])
 def hello():
@@ -64,9 +64,11 @@ def map_w01_6():
 #####################
 # Scheduler
 #####################
+#叫醒 heroku app服務 因為他沒使用時會睡著
 def job_wakeup():
     print('cron fun1: awake myself')
-    url = 'https://malo-cron2.herokuapp.com/'
+    #url = 'https://malo-cron2.herokuapp.com/'
+    url = 'https://git-heroku-pyhoon.herokuapp.com/'
     r = requests.get(url)
     print(r)
 
@@ -108,5 +110,5 @@ def run_web():
 
 if __name__ == "__main__":
     #app.run()
-    start_scheduler()
+    #start_scheduler()
     run_web()
