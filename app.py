@@ -17,7 +17,7 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 
 @app.route("/", methods=['GET'])
 def basic_url():
-    return 'hello everyone'
+    return 'hello everyone!'
 
 @app.route("/hello", methods=['GET'])
 def hello():
