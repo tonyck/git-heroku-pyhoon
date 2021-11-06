@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-#------------------------
+# ------------------------
 # v2021-11-01   1.W06, DB + web api
 #               2. plot chart
-#========================
+# ========================
 
+import matplotlib.pyplot as plt
 from flask import Flask, request, abort, render_template, Response
 from flask import json, jsonify, session, redirect, url_for
-#from flask_cors import CORS, cross_origin # for cross domain problem
+# from flask_cors import CORS, cross_origin # for cross domain problem
 from flask import send_file
 
 import requests
@@ -18,24 +19,27 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import os
 
 from sqlalchemy import create_engine
-import time, datetime
+import time
+import datetime
 
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 IS_LOCAL = 0
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
+
 @app.route("/", methods=['GET'])
 def basic_url():
     return 'hello'
+
 
 @app.route("/hello", methods=['GET'])
 def hello():
     name = request.args.get('name')
     return 'hello ' + name
+
 
 @app.route("/map/kh-parking", methods=['GET'])
 def map_kh_parking():
@@ -56,14 +60,14 @@ def map_kh_parking():
             fee = item[10]
             lat = item[5]
             lng = item[4]
-            info = '%s<br>%s<br>停車格數：%s' %(name, fee, total)
-            
+            info = '%s<br>%s<br>停車格數：%s' % (name, fee, total)
+
             folium.Marker([float(lat), float(lng)], tooltip=info,
-                        icon=folium.Icon(color='green', prefix='fa', icon='fa-car')).add_to(m)
-            
+                          icon=folium.Icon(color='green', prefix='fa', icon='fa-car')).add_to(m)
+
         except Exception as e:
-            print(e.args)    
-            
+            print(e.args)
+
     m.save('./map_kh_parking.html')
 
     return send_file('./map_kh_parking.html')
@@ -73,78 +77,85 @@ def map_kh_parking():
 def map_w01_6():
     return app.send_static_file('W01-6.html')
 
-#-- W06 DB + web api
+# -- W06 DB + web api
+
+
 @app.route('/aqi/data', methods=['GET'])
 def aqi_data():
     sid = request.args.get('sid')
     if not sid:
-        return jsonify({'result':'NG', 'log':'sid miss'})
+        return jsonify({'result': 'NG', 'log': 'sid miss'})
 
     mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
     my_db = create_engine(mysql_db_url)
-    resultProxy=my_db.execute("select * from malo_1030_aqi_table2 where uuid='%s' ORDER BY time ASC" %(sid) )
+    resultProxy = my_db.execute(
+        "select * from malo_1030_aqi_table2 where uuid='%s' ORDER BY time ASC" % (sid))
     data = resultProxy.fetchall()
 
     my_data_list = list()
     for item in data:
-        my_data_list.append( dict(item) )
+        my_data_list.append(dict(item))
 
-    result = {'result':'OK', 'data':my_data_list}
+    result = {'result': 'OK', 'data': my_data_list}
     return jsonify(result)
+
 
 @app.route('/aqi/data/24h', methods=['GET'])
 def aqi_data_24h():
     sid = request.args.get('sid')
     if not sid:
-        return jsonify({'result':'NG', 'log':'sid miss'})
-    
+        return jsonify({'result': 'NG', 'log': 'sid miss'})
+
     dt2 = datetime.datetime.now()
     dt1 = dt2-datetime.timedelta(days=1)
     tm_start = dt1.strftime("%Y/%m/%d %H:%M:%S")
     tm_end = dt2.strftime("%Y/%m/%d %H:%M:%S")
-    
+
     mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
     my_db = create_engine(mysql_db_url)
-    sql_cmd = "select * from malo_1030_aqi_table2 where uuid='%s' and time>'%s' and time<='%s' ORDER BY time ASC" %(sid, tm_start, tm_end)
+    sql_cmd = "select * from malo_1030_aqi_table2 where uuid='%s' and time>'%s' and time<='%s' ORDER BY time ASC" % (
+        sid, tm_start, tm_end)
     print(sql_cmd)
-    resultProxy=my_db.execute( sql_cmd )
+    resultProxy = my_db.execute(sql_cmd)
     data = resultProxy.fetchall()
 
     my_data_list = list()
     for item in data:
-        my_data_list.append( dict(item) )
+        my_data_list.append(dict(item))
 
-    result = {'result':'OK', 'data':my_data_list}
+    result = {'result': 'OK', 'data': my_data_list}
     return jsonify(result)
 
-#-- TODO: 更適合前端畫圖的API格式
+# -- TODO: 更適合前端畫圖的API格式
+
 
 @app.route('/aqi/chart/24h', methods=['GET'])
 def aqi_chart_24h():
     sid = request.args.get('sid')
     if not sid:
-        return jsonify({'result':'NG', 'log':'sid miss'})
-    
+        return jsonify({'result': 'NG', 'log': 'sid miss'})
+
     dt2 = datetime.datetime.now()
     dt1 = dt2-datetime.timedelta(days=1)
     tm_start = dt1.strftime("%Y/%m/%d %H:%M:%S")
     tm_end = dt2.strftime("%Y/%m/%d %H:%M:%S")
-    
+
     mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
     my_db = create_engine(mysql_db_url)
-    sql_cmd = "select * from malo_1030_aqi_table2 where uuid='%s' and time>'%s' and time<='%s' ORDER BY time ASC" %(sid, tm_start, tm_end)
+    sql_cmd = "select * from malo_1030_aqi_table2 where uuid='%s' and time>'%s' and time<='%s' ORDER BY time ASC" % (
+        sid, tm_start, tm_end)
     print(sql_cmd)
-    resultProxy=my_db.execute( sql_cmd )
+    resultProxy = my_db.execute(sql_cmd)
     data = resultProxy.fetchall()
 
     aqi_list = list()
     for item in data:
-        aqi_list.append( float(item['aqi']) )
+        aqi_list.append(float(item['aqi']))
 
     # plot
     plt.plot(aqi_list)
-    #plt.xlabel('時間',fontproperties=font)
-    #plt.ylabel('AQI',fontproperties=font)
+    plt.xlabel('時間')
+    plt.ylabel('AQI')
     plt.grid()
     plt.savefig('img.png')
     plt.close()
@@ -153,22 +164,27 @@ def aqi_chart_24h():
 #####################
 # Scheduler
 #####################
+
+
 def job_wakeup():
     print('cron fun1: awake myself')
     url = 'https://malo-cron2.herokuapp.com/'
     r = requests.get(url)
     print(r)
 
+
 def send_line(msg, token='rpHUQIIMkArQh6EtQpqfjK6hjPN2jjNxh0zDbcFVoD2'):
     url = "https://notify-api.line.me/api/notify"  # --> 不支援http, 只能用https
-    headers = {"Authorization" : "Bearer "+ token}
+    headers = {"Authorization": "Bearer " + token}
     title = '排程測試'
-    message =  '[%s] %s' %(title, msg)
-    payload = {"message" :  message}
+    message = '[%s] %s' % (title, msg)
+    payload = {"message":  message}
 
-    r = requests.post(url ,headers = headers ,params=payload)
-    
+    r = requests.post(url, headers=headers, params=payload)
+
 #- 空污通報
+
+
 def job_function2():
     url = 'https://data.epa.gov.tw/api/v1/aqx_p_432?format=json&api_key=9be7b239-557b-4c10-9775-78cadfc555e9'
     r = requests.get(url)
@@ -176,16 +192,19 @@ def job_function2():
     data = r.json()
     records = data['records']
     for item in records:
-        if item['County']=='高雄市' and item['SiteName']=='鳳山':
-            send_line('%s>> AQI=%s' %(item['SiteName'], item['AQI']))
+        if item['County'] == '高雄市' and item['SiteName'] == '鳳山':
+            send_line('%s>> AQI=%s' % (item['SiteName'], item['AQI']))
 
 #- 空污資料收集
+
+
 def job_function3():
     mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
     my_db = create_engine(mysql_db_url)
 
     # check and create table
-    resultProxy = my_db.execute("CREATE TABLE IF NOT EXISTS your_table (uuid text NOT NULL, time text NOT NULL, aqi text, pm25 text)")
+    resultProxy = my_db.execute(
+        "CREATE TABLE IF NOT EXISTS your_table (uuid text NOT NULL, time text NOT NULL, aqi text, pm25 text)")
 
     # get data
     url = 'https://data.epa.gov.tw/api/v1/aqx_p_432?format=json&api_key=9be7b239-557b-4c10-9775-78cadfc555e9'
@@ -197,20 +216,22 @@ def job_function3():
     aqi = ''
     pm25 = ''
     for item in records:
-        if item['County']=='高雄市':
+        if item['County'] == '高雄市':
             uuid = item['SiteName']
             my_time = item['PublishTime']
             aqi = item['AQI']
             pm25 = item['PM2.5']
 
             # insert
-            resultProxy=my_db.execute("insert into your_table (uuid, time, aqi, pm25) values('%s', '%s', '%s', '%s')" %(uuid, my_time, aqi, pm25))
+            resultProxy = my_db.execute(
+                "insert into your_table (uuid, time, aqi, pm25) values('%s', '%s', '%s', '%s')" % (uuid, my_time, aqi, pm25))
 
     # get data from db
-    resultProxy=my_db.execute("select * from your_table")
+    resultProxy = my_db.execute("select * from your_table")
     data = resultProxy.fetchall()
     print('-- data --')
     print(data)
+
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
@@ -228,11 +249,13 @@ def start_scheduler():
     # start the scheduler
     scheduler.start()
 
+
 def run_web():
     os.system('gunicorn -w 2 app:app')
 
+
 if __name__ == "__main__":
-    
+
     if IS_LOCAL:
         app.run(debug=True)
     else:
