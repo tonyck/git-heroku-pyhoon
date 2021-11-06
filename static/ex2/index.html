@@ -43,6 +43,22 @@
                     }
                 }
             );
+            $.get("/aqi/data/24h?sid=左營",//jquery
+                function (data) {
+                    console.log(data);
+                    if (data.length == 0)
+                        return;
+
+                    if (data.result == "OK") {
+                        my_data = data.data;
+                        len = my_data.length;
+                        console.log(my_data, len);
+                        console.log(my_data[len - 1])
+                        //#$("#station1").text(my_data.uuid);
+                        $("#aq2").text("AQI = " + my_data[len - 1]['aqi']);
+                    }
+                }
+            );
             timerFlag = setTimeout(load_data, 30000); //Reload per 30 sec
         }
 
@@ -106,8 +122,8 @@
                         <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                             <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
                                     class="bi bi-cloud-download"></i></div>
-                            <h2 class="fs-4 fw-bold">Free to download</h2>
-                            <p class="mb-0">As always, Start Bootstrap has a powerful collectin of free templates.</p>
+                            <h2 class="fs-4 fw-bold">-左營站-</h2>
+                            <p class="mb-0" id="aqi2">
                         </div>
                     </div>
                 </div>
