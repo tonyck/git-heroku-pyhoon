@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>空氣資訊 - 改這邊是Browser上面分頁的文字</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <!-- Bootstrap icons-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="css/styles.css" rel="stylesheet" />
+
+    <!-- W06 flask_api4 ex2-->
+    <script type="text/javascript">
+        var plants;
+        var plant_device;
+        var select_id = undefined;
+        var str_today;
+        var cookie_plant, cookie_permit;
+        var myChartDay, myChartMonth, myChartYear;
+        var gaugeChart;
+        var apiFilter;
+        var timerFlag, timerFlagImg;
+
+        function load_data() {
+            $.get("/aqi/data/24h?sid=楠梓",//jquery
+                function (data) {
+                    console.log(data);
+                    if (data.length == 0)
+                        return;
+
+                    if (data.result == "OK") {
+                        my_data = data.data;
+                        len = my_data.length;
+                        console.log(my_data, len);
+                        console.log(my_data[len - 1])
+                        //#$("#station1").text(my_data.uuid);
+                        $("#aqi1").text("AQI = " + my_data[len - 1]['aqi']);
+                    }
+                }
+            );
+            timerFlag = setTimeout(load_data, 30000); //Reload per 30 sec
+        }
+
+        function toYYYYMMDD(d) {
+            var yyyy = d.getFullYear().toString();
+            var mm = (d.getMonth() + 101).toString().slice(-2);
+            var dd = (d.getDate() + 100).toString().slice(-2);
+            return yyyy + '-' + mm + '-' + dd;
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <!-- Responsive navbar-->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container px-lg-5">
+            <a class="navbar-brand" href="#!">Start Bootstrap</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="#!">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#!">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#!">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Header-->
+    <header class="py-5">
+        <div class="container px-lg-5">
+            <div class="p-4 p-lg-5 bg-light rounded-3 text-center">
+                <div class="m-4 m-lg-5">
+                    <h1 class="display-5 fw-bold">空污即時資訊</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Page Content-->
+    <section class="pt-4">
+        <div class="container px-lg-5">
+            <!-- Page Features-->
+            <div class="row gx-lg-5">
+                <div class="col-lg-6 col-xxl-4 mb-5">
+                    <div class="card bg-light border-0 h-100">
+                        <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
+                                    class="bi bi-chat-dots"></i></div>
+                            <h2 class="fs-4 fw-bold">-楠梓站-</h2>
+                            <p class="mb-0" id="aqi1">
+
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-xxl-4 mb-5">
+                    <div class="card bg-light border-0 h-100">
+                        <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
+                                    class="bi bi-cloud-download"></i></div>
+                            <h2 class="fs-4 fw-bold">Free to download</h2>
+                            <p class="mb-0">As always, Start Bootstrap has a powerful collectin of free templates.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-xxl-4 mb-5">
+                    <div class="card bg-light border-0 h-100">
+                        <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
+                                    class="bi bi-card-heading"></i></div>
+                            <h2 class="fs-4 fw-bold">Jumbotron hero header</h2>
+                            <p class="mb-0">The heroic part of this template is the jumbotron hero header!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-xxl-4 mb-5">
+                    <div class="card bg-light border-0 h-100">
+                        <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
+                                    class="bi bi-bootstrap"></i></div>
+                            <h2 class="fs-4 fw-bold">Feature boxes</h2>
+                            <p class="mb-0">We've created some custom feature boxes using Bootstrap icons!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-xxl-4 mb-5">
+                    <div class="card bg-light border-0 h-100">
+                        <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
+                                    class="bi bi-code"></i></div>
+                            <h2 class="fs-4 fw-bold">Simple clean code</h2>
+                            <p class="mb-0">We keep our dependencies up to date and squash bugs as they come!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-xxl-4 mb-5">
+                    <div class="card bg-light border-0 h-100">
+                        <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
+                            <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><i
+                                    class="bi bi-patch-check"></i></div>
+                            <h2 class="fs-4 fw-bold">A name you trust</h2>
+                            <p class="mb-0">Start Bootstrap has been the leader in free Bootstrap templates since 2013!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer-->
+    <footer class="py-5 bg-dark">
+        <div class="container">
+            <p class="m-0 text-center text-white">Copyright &copy; Your Website 2021</p>
+        </div>
+    </footer>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/scripts.js"></script>
+
+    <!-- 在這邊呼叫我們的function，為的是在上面的html元素都載入後，再執行程式 -->
+    <!-- Bootstrap core JavaScript-->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            load_data();
+
+        });
+    </script>
+
+</body>
+
+</html>
