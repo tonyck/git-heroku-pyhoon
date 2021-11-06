@@ -33,7 +33,7 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 @app.route("/", methods=['GET'])
 def basic_url():
     dt3 = datetime.datetime.now()
-    return 'hello'+dt3
+    return 'hello'+str(dt3)
 
 
 @app.route("/hello", methods=['GET'])
