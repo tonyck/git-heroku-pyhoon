@@ -6,3 +6,4 @@ geocoder
 apscheduler
 sqlalchemy
 PyMySQL
+matplotlib

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #------------------------
-# v2021-11-01   W06, DB + web api
+# v2021-11-01   1.W06, DB + web api
+#               2. plot chart
 #========================
 
 from flask import Flask, request, abort, render_template, Response
@@ -18,6 +19,10 @@ import os
 
 from sqlalchemy import create_engine
 import time, datetime
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 IS_LOCAL = 0
 
@@ -114,6 +119,36 @@ def aqi_data_24h():
 
 #-- TODO: 更適合前端畫圖的API格式
 
+@app.route('/aqi/chart/24h', methods=['GET'])
+def aqi_chart_24h():
+    sid = request.args.get('sid')
+    if not sid:
+        return jsonify({'result':'NG', 'log':'sid miss'})
+    
+    dt2 = datetime.datetime.now()
+    dt1 = dt2-datetime.timedelta(days=1)
+    tm_start = dt1.strftime("%Y/%m/%d %H:%M:%S")
+    tm_end = dt2.strftime("%Y/%m/%d %H:%M:%S")
+    
+    mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
+    my_db = create_engine(mysql_db_url)
+    sql_cmd = "select * from malo_1030_aqi_table2 where uuid='%s' and time>'%s' and time<='%s' ORDER BY time ASC" %(sid, tm_start, tm_end)
+    print(sql_cmd)
+    resultProxy=my_db.execute( sql_cmd )
+    data = resultProxy.fetchall()
+
+    aqi_list = list()
+    for item in data:
+        aqi_list.append( float(item['aqi']) )
+
+    # plot
+    plt.plot(aqi_list)
+    plt.xlabel(aqi_list[0])
+    plt.ylabel(aqi_list[2])
+    plt.grid()
+    plt.savefig('img.png')
+    plt.close()
+    return send_file('img.png', mimetype='image/png')
 
 #####################
 # Scheduler
