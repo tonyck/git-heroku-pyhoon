@@ -161,6 +161,7 @@ def aqi_chart_24h():
     plt.ylabel('AQI')
     plt.xticks(time_list, rotation=90)
     plt.grid()
+    plt.rcParams["figure.figsize"] = (12, 10)
     plt.savefig('img.png')
     plt.close()
     return send_file('img.png', mimetype='image/png')
