@@ -4,3 +4,5 @@ requests
 folium
 geocoder
 apscheduler
+sqlalchemy
+PyMySQL

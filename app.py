@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+#------------------------
+# v2021-11-01   W06, DB + web api
+#========================
 
 from flask import Flask, request, abort, render_template, Response
 from flask import json, jsonify, session, redirect, url_for
@@ -13,11 +16,16 @@ import geocoder
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 
+from sqlalchemy import create_engine
+import time, datetime
+
+IS_LOCAL = 0
+
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 @app.route("/", methods=['GET'])
 def basic_url():
-    return 'hello everyone!'
+    return 'hello'
 
 @app.route("/hello", methods=['GET'])
 def hello():
@@ -60,22 +68,66 @@ def map_kh_parking():
 def map_w01_6():
     return app.send_static_file('W01-6.html')
 
+#-- W06 DB + web api
+@app.route('/aqi/data', methods=['GET'])
+def aqi_data():
+    sid = request.args.get('sid')
+    if not sid:
+        return jsonify({'result':'NG', 'log':'sid miss'})
+
+    mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
+    my_db = create_engine(mysql_db_url)
+    resultProxy=my_db.execute("select * from malo_1030_aqi_table2 where uuid='%s' ORDER BY time ASC" %(sid) )
+    data = resultProxy.fetchall()
+
+    my_data_list = list()
+    for item in data:
+        my_data_list.append( dict(item) )
+
+    result = {'result':'OK', 'data':my_data_list}
+    return jsonify(result)
+
+@app.route('/aqi/data/24h', methods=['GET'])
+def aqi_data_24h():
+    sid = request.args.get('sid')
+    if not sid:
+        return jsonify({'result':'NG', 'log':'sid miss'})
+    
+    dt2 = datetime.datetime.now()
+    dt1 = dt2-datetime.timedelta(days=1)
+    tm_start = dt1.strftime("%Y/%m/%d %H:%M:%S")
+    tm_end = dt2.strftime("%Y/%m/%d %H:%M:%S")
+    
+    mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
+    my_db = create_engine(mysql_db_url)
+    sql_cmd = "select * from malo_1030_aqi_table2 where uuid='%s' and time>'%s' and time<='%s' ORDER BY time ASC" %(sid, tm_start, tm_end)
+    print(sql_cmd)
+    resultProxy=my_db.execute( sql_cmd )
+    data = resultProxy.fetchall()
+
+    my_data_list = list()
+    for item in data:
+        my_data_list.append( dict(item) )
+
+    result = {'result':'OK', 'data':my_data_list}
+    return jsonify(result)
+
+#-- TODO: 更適合前端畫圖的API格式
+
 
 #####################
 # Scheduler
 #####################
-#叫醒 heroku app服務 因為他沒使用時會睡著
 def job_wakeup():
     print('cron fun1: awake myself')
-    #url = 'https://malo-cron2.herokuapp.com/'
-    url = 'https://git-heroku-pyhoon.herokuapp.com/'
+    url = 'https://malo-cron2.herokuapp.com/'
     r = requests.get(url)
     print(r)
 
 def send_line(msg, token='rpHUQIIMkArQh6EtQpqfjK6hjPN2jjNxh0zDbcFVoD2'):
     url = "https://notify-api.line.me/api/notify"  # --> 不支援http, 只能用https
     headers = {"Authorization" : "Bearer "+ token}
-    title = 'tony排程測試'
+    title = '排程測試'
     message =  '[%s] %s' %(title, msg)
     payload = {"message" :  message}
 
@@ -92,15 +144,51 @@ def job_function2():
         if item['County']=='高雄市' and item['SiteName']=='鳳山':
             send_line('%s>> AQI=%s' %(item['SiteName'], item['AQI']))
 
+#- 空污資料收集
+def job_function3():
+    mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
+    my_db = create_engine(mysql_db_url)
+
+    # check and create table
+    resultProxy = my_db.execute("CREATE TABLE IF NOT EXISTS your_table (uuid text NOT NULL, time text NOT NULL, aqi text, pm25 text)")
+
+    # get data
+    url = 'https://data.epa.gov.tw/api/v1/aqx_p_432?format=json&api_key=9be7b239-557b-4c10-9775-78cadfc555e9'
+    r = requests.get(url)
+    data = r.json()
+    records = data['records']
+    uuid = ''
+    my_time = ''
+    aqi = ''
+    pm25 = ''
+    for item in records:
+        if item['County']=='高雄市':
+            uuid = item['SiteName']
+            my_time = item['PublishTime']
+            aqi = item['AQI']
+            pm25 = item['PM2.5']
+
+            # insert
+            resultProxy=my_db.execute("insert into your_table (uuid, time, aqi, pm25) values('%s', '%s', '%s', '%s')" %(uuid, my_time, aqi, pm25))
+
+    # get data from db
+    resultProxy=my_db.execute("select * from your_table")
+    data = resultProxy.fetchall()
+    print('-- data --')
+    print(data)
+
 def start_scheduler():
     scheduler = BackgroundScheduler()
 
     # run every 10 minute
-    #scheduler.add_job(job_wakeup, 'cron', minute='*/10')
+    scheduler.add_job(job_wakeup, 'cron', minute='*/10')
 
     # 每天早上6:30執行
-    #scheduler.add_job(job_function2, 'cron', hour='6', minute='30')
-    scheduler.add_job(job_function2, 'cron', minute='*/1')
+    scheduler.add_job(job_function2, 'cron', hour='6', minute='30')
+    #scheduler.add_job(job_function2, 'cron', minute='*/1')
+
+    # 每小時的20分執行
+    #scheduler.add_job(job_function3, 'cron', minute='20')
 
     # start the scheduler
     scheduler.start()
@@ -109,6 +197,9 @@ def run_web():
     os.system('gunicorn -w 2 app:app')
 
 if __name__ == "__main__":
-    #app.run()
-    #start_scheduler()
-    run_web()
+    
+    if IS_LOCAL:
+        app.run(debug=True)
+    else:
+        start_scheduler()
+        run_web()
