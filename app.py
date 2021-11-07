@@ -34,6 +34,7 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 def basic_url():
     dt3 = datetime.datetime.now()
     return 'hello'+str(dt3)
+    return app.send_static_file()
 
 
 @app.route("/hello", methods=['GET'])
@@ -153,7 +154,8 @@ def aqi_chart_24h():
     time_list = list()
     for item in data:
         aqi_list.append(float(item['aqi']))
-        time_list.append(item['time'])
+        # time_list.append(item['time'])
+        time_list.append(item['time'][5:13])
 
     # plot
     plt.plot(time_list, aqi_list, 'b-o')
@@ -161,7 +163,8 @@ def aqi_chart_24h():
     plt.ylabel('AQI')
     plt.xticks(time_list, rotation=90)
     plt.grid()
-    plt.rcParams["figure.figsize"] = (12, 10)
+    plt.savefig('img.png',bbox_inches='tight')
+    #plt.savefig('img.png')
     plt.savefig('img.png')
     plt.close()
     return send_file('img.png', mimetype='image/png')
