@@ -167,7 +167,7 @@ def aqi_chart_24h():
 #####################
 def job_wakeup():
     print('cron fun1: awake myself')
-    url = 'https://malo-cron2.herokuapp.com/'
+    url = 'https://malo-cron2.herokuapp.com/' #https://git-heroku-pyhoon.herokuapp.com/
     r = requests.get(url)
     print(r)
 
@@ -234,7 +234,7 @@ def start_scheduler():
 
     # 每天早上6:30執行
     #scheduler.add_job(job_function2, 'cron', hour='6', minute='30')
-    scheduler.add_job(job_function2, 'cron', minute='*/5')
+    #scheduler.add_job(job_function2, 'cron', minute='*/5')
 
     # 每小時的20分執行
     #scheduler.add_job(job_function3, 'cron', minute='20')
