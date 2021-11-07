@@ -33,7 +33,10 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 
 @app.route("/", methods=['GET'])
 def basic_url():
-    return app.send_static_file('index.html')
+    dt3 = datetime.datetime.now()
+    return 'hello'+str(dt3)
+    #return app.send_static_file()
+    #return app.send_static_file('index.html')
 
 @app.route("/main", methods=['GET'])
 def main_url():
