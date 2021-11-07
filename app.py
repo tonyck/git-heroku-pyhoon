@@ -171,7 +171,9 @@ def job_wakeup():
     r = requests.get(url)
     print(r)
 
-def send_line(msg, token='rpHUQIIMkArQh6EtQpqfjK6hjPN2jjNxh0zDbcFVoD2'):
+def send_line(msg, token='LqyPR7ySXTUkI4uGHK210jEQ9uThTB2vuTSQbq901Sy'): 
+    #LqyPR7ySXTUkI4uGHK210jEQ9uThTB2vuTSQbq901Sy 個人
+    #rpHUQIIMkArQh6EtQpqfjK6hjPN2jjNxh0zDbcFVoD2 群組
     url = "https://notify-api.line.me/api/notify"  # --> 不支援http, 只能用https
     headers = {"Authorization" : "Bearer "+ token}
     title = '排程測試'
@@ -231,8 +233,8 @@ def start_scheduler():
     scheduler.add_job(job_wakeup, 'cron', minute='*/10')
 
     # 每天早上6:30執行
-    scheduler.add_job(job_function2, 'cron', hour='6', minute='30')
-    #scheduler.add_job(job_function2, 'cron', minute='*/1')
+    #scheduler.add_job(job_function2, 'cron', hour='6', minute='30')
+    scheduler.add_job(job_function2, 'cron', minute='*/5')
 
     # 每小時的20分執行
     #scheduler.add_job(job_function3, 'cron', minute='20')
